@@ -1,0 +1,253 @@
+                               CatGen v3.0
+                      (C) 1997 4th Dimension Software
+                           Mark Glenn, President
+                      -------------------------------
+
+    INTRODUCTION
+    ------------
+
+    CatGen v3.0 is a program to allow programmers of QB or QBASIC to have a
+    useful file to BAS converter.
+
+    Only compiling is required to create these catalogs.
+
+    REQUIREMENTS
+    ------------
+      1) Color Monitor
+      2) QB or QBasic
+      3) Hard drive
+      4) QB for compilation
+      5) Keyboard
+
+    FEATURES included
+    -----------------
+      1) Color capability
+      2) Speed (YEAH SPEEEEEED)
+      3) 5000 line maximum
+      4) Scrolling feature
+      5) Convert TEXT to BAS to be compiled
+      6) Search Feature
+      7) Multi colored lines
+      8) Background colors
+      9) No flickering
+     10) One file only (Doc inside BAS file)
+     11) Mouse (even in QBasic)
+     12) Scroll Bar
+     13) Fast Code
+     14) Buttons
+     15) Preprogrammed lines
+
+    TABLE OF CONTENTS
+    -----------------
+      1) What is CatGen v3.0
+      2) What is included
+      3) Command line perimeters
+      4) What is it doing while running.
+      5) How does it do all this
+      6) I've run it, now what?
+      7) Color
+      8) Modifying
+      9) How do I use the actual compiled work.
+     10) Final touches
+     
+    APPENDIXES
+    ----------
+      A) Trouble Shooting
+      B) Upcoming Features
+      C) Features of each version.
+      D) Information about our company
+      E) Other programs
+
+  1) What is CatGen v3.0?
+     ---------------------
+     CatGen v3.0 is a program that takes your TEXT files and converts them
+  into self running file viewers.  Not only that, but it is in color. 
+  Believe it or not, this file was created with CatGen v3.0.  It's
+  capabilities are outrages.  It has absolutely no flicker and has incredible
+  speed.  It is based on 25x80 screen size and will look quite weird in 50x80.
+  It has scrolling features that will be used by using the up, down, PGUP, PGDN
+  keys.  The best feature though is that you can distribute your file.
+
+    2) What is included?
+     -----------------
+     CatGen comes with 9 files
+      1: CATGEN.EXE   - The catalog generator
+      2: CATDOC.BAS   - This file source code
+      3: CATDOC.EXE   - This file
+      4: CATGEN.DOC   - This file in TEXT format
+      5: ORDER.FRM    - Order and Registration file for other programs
+      6: FILE_ID.DIZ  - File Info
+      7: CATALOG.EXE  - Catalog for Inventive Software
+      8: ANSI2CAT.EXE - Ansi converter
+      9: FONTSET.TXT  - ASCII Fonts
+
+  3) Command line perimeters
+     -----------------------
+     There really is only one command line perimeter.
+       : CatGen Infile.ext (Outfile.ext)
+        The Infile.exe must be include.  Outfile.ext is something that is
+        optional.  If you decide not to use this, it will output to CAT1.OUT.
+
+  4) What is it doing while running?
+     -------------------------------
+     It does multiple things.  It first creates a temp file called TEMP1.TMP
+  that holds your DOC with the DATA statements in front of it.  Then it goes
+  in and loads all the BASIC statements to run it.  A file is created called
+  (filename) and you have a finished product ready to compile.
+
+  5) How does it do all this?
+     ------------------------
+     It takes your file and process it and creates BASIC text.  Take a look at
+  the file sometime and see how it is really done.
+
+  6) I've run it, now what?
+     ----------------------
+     Okay, you have created your file and now it is time to modify.  Look at
+  Chapter 8 for that.  Chapter 7 shows how to change the color of each line.
+  After that, you want to compile it.  Load the program into QB by typing this:
+    QB filename /L QB.QLB   or
+    QBASIC filename
+  Now go to run and compile.  Make it Stand Alone EXE and click on Make EXE
+  and Exit.  If you only have qbasic, do the following.  Create a file called
+  filename.BAT and edit it.
+  @ECHO OFF
+  QBASIC filename /RUN
+  
+  7) Color
+     -----
+     Wow, I can change color?  Yep, you can.  If you look at the end, you will
+  see that is says the DATA statement and then the numbers '03'.  This is the
+  color that it changes it all to.  You can change this number to anything.
+  It must be two digits long like:  03 or C5.  In 2.0, the numbers were
+  changed to hex so you can now do backgrounds.  The colors are as following:
+  00) BLACK       08) GREY             10) BLACK ON BLUE
+  01) BLUE        09) LIGHT BLUE       FF) BRIGHT WHITE ON WHITE
+  02) GREEN       0A) LIGHT GREEN
+  03) CYAN        0B) LIGHT CYAN
+  04) RED         0C) LIGHT RED
+  05) MAGENTA     0D) LIGHT MAGENTA
+  06) BROWN       0E) YELLOW
+  07) WHITE       0F) BRIGHT WHITE
+
+  8) Modifying
+     ---------
+     For people who want to make a big logo on the doc, I included a ANSI to
+  CATGEN converter.  All you do is add it to your doc and it will look exactly
+  like the ansi file.  (Sorry, no animations and only 25 lines long).
+
+    Also, you can add buttons and lines:
+    þBUTTON0001
+    CHR$(254) + BUTTON0001  (4 digit line number)
+    þLINE1
+    CHR$(254) + LINE1 (1 digit line type)
+
+  9) How do I use the actual compiled work?
+     --------------------------------------
+     Well, you first run the program.  You see the file and information at the
+  bottom.  You use the arrow keys or the PGUP or PGDN key.  These move the DOC
+  up or down.  The new feature is the "S" feature.  It searches the file for
+  whatever you want.
+
+ 10) Final Touches
+     -------------
+     Since I don't really know any final touches, but all great DOCs have this
+   area.  You can modify the generated file all you want.  The generated viewer
+   is freeware and maybe modified and distributed without permission.  Think of
+   it as your program you and only you made.
+
+  A) Trouble Shooting
+     ----------------
+     1) While compiling, it says an out of memory error
+       A:Try freeing more memory.  If you don't want to do this, if you look
+          at the begining of the file, it shows DIM statements.  Change this
+          to the length of your file.  If you don't know the length, look at
+          the first DATA statement.  It will say something like this:
+           DATA 253
+          Change the DIM statements to:
+           DIM text$(255) 'add 2 just in case
+           DIM ColorVal(255) 'add 2 just in case
+           You shouln't have to do this because it is automatic now.
+     2) While compiling, it says an error
+       A:Try trouble shooting it.  If that doesn't work, re-generate the file.
+          if that still doesn't work, contact me about it.
+     3) Doesn't generate
+       A:You have a corrupted CatGen v3.0.  Please reinstall.  You may also
+          have a bad output file.  DOS only allows certain characters in
+          filenames.  Try a filename with only letters:
+           CATGEN MY.DOC MYDOC.BAS
+     4) Bombs
+       A:You have a corrupted CatGen v3.0.  Please reinstall.
+     5) Subscript out of range
+       A:Your file is more than your memory can handle.  Cut it down.
+     6) Unexpected error, please recompile
+       A:For some odd reason, your DOC got edited so it can not be used.  You
+         might have edited it and messed it up.  If you know what you are
+         doing, take out the ON ERROR statement and try to debug it.  If not,
+         re compile it.  If the same error occurs, contact me.
+     7) I lost my cursor.
+       A:When the Help is invoked, it turns off the cursor.  It doesn't just
+         disappear.  Just turn it back on:
+         LOCATE , , 1, 7, 8
+     8) I don't have a mouse and start-up is sooo slow.
+        You can easily turn off the mouse.  Look for the lines that say
+        >>>>>> START HERE <<<<<<
+     9) I edit the basic file and it doesn't have any "'s in the DOC.  How
+        do I add them?
+       A:Well, since DATA statements are surrounded by "'s, all "'s in your
+         DOC were converted to character 255's.  To add "'s, go to the 
+         position where you want them and hold down ALT.  Then press 255 on the
+         key pad and let go of ALT.  It is an invisible character, but it is 
+         there.
+
+  B) Upcoming Features
+     -----------------
+        Editor
+        Multicolored search
+
+  C) Features of Each Version
+     ------------------------
+      v1.0b - The first official version.  Never distributed.
+
+      v1.0 - Added color feature.  PGUP and PGDN keys added.  Fixed
+             Arrow key bug.  Finally distributed
+
+      v1.1 - Search feature added.  Also added the ON ERROR function so
+             (Just in case) if it has an error it won't show that ugly error
+             screen.  Added the registration file(oops, sorry to everyone
+             with version 1.0).
+
+      v1.2 - Added 'S' at the bottom.  Fixed the scrolling up one line on
+             search bug.  Fixed bottom text on no search bug.  Man did I have
+             more trouble with that search feature than anything else.  Mainly
+             a bug fix version.
+
+      v1.3 - This would have been the one with EMS support but found it would
+             only work in QuickBasic without rewriting the whole code.  Maybe
+             later.
+
+      v1.4 - Added online help support.  With this new option, you won't see
+             all the ugly code because it has been put in SUBS.  Also I added
+             a change in the DIM statements.  No need to change them this time
+             because it automaticly changes them.  Also added limited edition
+             source code.
+
+      v2.0 - Limited edition source code taken away because of people without
+             respect.  Scrolls sideways.  Multiple colored lines.  Background
+             colors.  Improved search.  Now only supports HELP programs 
+             because the two options were identical except HELP was cleaner.
+
+      v3.0 - New and improved version.  CatGen is now 15x faster, cleaner code
+             and mouse/scroll bar/buttons.  Also includes preprogrammed lines
+             and buttons to press.  Better search, ANSI converter, and ASCII
+             fonts document.
+  
+  D) Information about our company
+     -----------------------------
+    As of the summer of 1996, our company changed its name to:
+            4th Dimension Software
+    If you see any programs with the company Inventive software or 4th Dim.
+    then you can feel safe that they are from our company.
+
+    Please visit us at out web-site.
+    http://4ds.simplenet.com
+    and click on the big 4th Dimension image.

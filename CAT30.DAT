@@ -1,0 +1,618 @@
+31
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+DEFINT A-Z
+
+'Mouse Stuff
+DECLARE FUNCTION ThereIsAMouse% ()
+DECLARE FUNCTION GetMouseStatus% (MPosX%, MPosY%)
+DECLARE FUNCTION MouseReset% ()
+DECLARE SUB MouseHandler (ax%, bx%, cx%, dx%)
+DECLARE SUB MouseOn ()
+DECLARE SUB MouseOff ()
+
+'CatGen Stuff
+DECLARE SUB DB ()
+DECLARE SUB DrawBottom ()
+DECLARE SUB DrawLine (Kind)
+DECLARE SUB InitMouse ()
+DECLARE SUB InitHelp ()
+DECLARE SUB OnlineHelp ()  '<--- The whole program
+DECLARE SUB P (TheColor, st$)
+DECLARE SUB PrintDocument ()  ' <-- Not implemented yet
+DECLARE SUB Search ()
+DECLARE SUB ScrollBar (Position%, Total%)
+DECLARE SUB DrawEnding ()
+
+DECLARE FUNCTION Erase$ (TheStr$)
+DECLARE FUNCTION GetKey$ ()
+
+DIM SHARED MouseVisible, MHMax, MVMax, Mouseinit
+DIM SHARED MouseIntr, MHCell, MVCell, DoneIt
+DIM SHARED Text$(
+DIM SHARED ColorVal(
+DIM SHARED num, wid, LastPos, UseMouse, Start, DetColor
+
+TYPE RegType       'Typedef for DOS registers
+	ax  AS INTEGER
+	bx  AS INTEGER
+	cx  AS INTEGER
+	dx  AS INTEGER
+	bp  AS INTEGER
+	si  AS INTEGER
+	di  AS INTEGER
+	flg AS INTEGER
+END TYPE
+
+COMMON SHARED /QBMouse/ True, False
+CLS
+True = -1: False = 0: SWidth = 80
+
+'Mouse button press definitions
+
+	PrL = 1: PrR = 2: PrLr = 3: PrM = 4
+	PrLM = 5: PrMR = 6: PrAll = 7: PrNone = 0
+
+'Button definitions
+
+	ButtonLeft = 0
+	ButtonRight = 1
+	ButtonMiddle = 2
+
+DIM SHARED Inregs AS RegType, Outregs AS RegType
+DIM SHARED dos%(45)                    'get some memory space
+DEF SEG = VARSEG(dos%(0))
+RESTORE ASM
+FOR i% = 0 TO 88
+	READ d%
+	POKE VARPTR(dos%(0)) + i%, d%'copy code into memory
+NEXT i%
+
+' Full use of the program with 4 lines of code
+
+' >>>>>>>>  START HERE  <<<<<<<<<
+
+UseMouse = True ' Change to False to not use a mouse (Scans for a mouse too)
+					 ' and don't touch anything else.
+
+InitMouse       ' Initialize the mouse
+OnlineHelp      ' Command for the viewer
+
+MouseOff        ' Turn mouse off
+
+' >>>>>>>>  END HERE  <<<<<<<<<
+if DetColor THEN DrawEnding
+COLOR 7, 0
+SYSTEM
+
+Help:
+‘‘‘‘
+
+ASM:
+'       DOS call code
+DATA &H55, &H06, &H1E, &H8B, &HEC, &H9C, &H8B, &H7E, &H0E, &H8A
+DATA &H05, &H8B, &H7E, &H0C, &HB4, &H35, &HCD, &H21, &H8B, &H46
+DATA &HF8, &H05, &H20, &H00, &H0E, &H50, &H06, &H53, &H8B, &H05
+DATA &H8B, &H5D, &H02, &H8B, &H4D, &H04, &H8B, &H55, &H06, &H8B
+DATA &H6D, &H08, &H8B, &H75, &H0A, &H8B, &H7D, &H0C, &HFA, &HCB
+DATA &H1F, &H07, &H57, &H9C, &H8B, &HFC, &H36, &H8B, &H7D, &H0A
+DATA &H89, &H05, &H89, &H5D, &H02, &H89, &H4D, &H04, &H89, &H55
+DATA &H06, &H89, &H6D, &H08, &H89, &H75, &H0A, &H58, &H89, &H45
+DATA &H0E, &H58, &H89, &H45, &H0C, &H5D, &HCA, &H06, &H00
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                          Draws a button quickly                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'15 long (&BTTNXXXX)
+SUB DB
+P 8, ">": P 7, ">": P 15, "> ": P 15, "Click Here": P 15, " <": P 7, "<": P 8, "<"
+END SUB
+
+DEFSNG A-Z
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                 Draws the lines on the bottom of the screen              ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+SUB DrawBottom
+LOCATE 24, 1
+P 8, "ÄÄ": P 7, "ÄÄ": P 15, STRING$(72, 196): P 7, "ÄÄ": P 8, "ÄÄ"
+LOCATE 25, 1
+PRINT SPACE$(80); : LOCATE 25, 1
+P 10, "CatGen v3.0"
+LOCATE 25, 29
+P 8, "4": P 7, "t"
+P 15, "h Dimension Softwa": P 7, "r": P 8, "e"
+PRINT "         ";
+P 4, "(": P 10, CHR$(24) + CHR$(25): P 4, ") ("
+P 10, "S": P 4, ")": P 9, "earch ": P 4, "(": P 10, "P": P 4, ")"
+P 9, "rint"
+COLOR 0, 7
+LOCATE 1, 80: PRINT CHR$(24);
+FOR a = 2 TO 22
+LOCATE a, 80: PRINT "°";
+NEXT
+LOCATE 23, 80: PRINT CHR$(25);
+COLOR 7, 0
+
+END SUB
+
+DEFINT A-Z
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+SUB DrawEnding
+COLOR 7, 0
+CLS
+COLOR 8: PRINT "                        ___ ___ ___________ ___ ___"
+COLOR 8: PRINT "                       Y   Y   Y   _   _   Y   Y   |"
+COLOR 8: PRINT "                       |   l   l___|   |___|   l   |"
+COLOR 8: PRINT "                       l____   |   |   |   |   _   |"
+COLOR 7: PRINT "                           |   |   |   |   |   |   |"
+COLOR 7: PRINT "                           l___|   |   l   l___|   |"
+COLOR 7: PRINT "                                   `---'       `---'"
+COLOR 7: PRINT "      ______   ___ ___ ___ _______ ______  _______ ___ _______ ______"
+COLOR 7: PRINT "     Y   _  \ Y   Y   Y   Y   _   Y   _  \Y   _   Y   Y   _   Y   _  \"
+COLOR 7: PRINT "     |   |   \|   |       |   l___|   |   |   l___l   |   |   |   |   |"
+COLOR 15: PRINT "     |   |    \   |  \_/  |   __)_    |   l____   |   |   |   |   |   |"
+COLOR 15: PRINT "     |   l    /   |   |   |   l   |   |   |   l   |   |   l   |   |   |"
+COLOR 15: PRINT "     l_______/|   l___|   l_______l___|   l_______|   l_______l___|   l"
+COLOR 15: PRINT "              `---'   `---'           `---'       `---'           `---'"
+COLOR 15: PRINT "     _______ _______ _______ ___________ ___ ___ _______ _______ _______"
+COLOR 7: PRINT "    Y   _   Y   _   Y   _   Y   _   _   Y   Y   Y   _   Y   _   \   _   Y"
+COLOR 7: PRINT "    |   l___l   |   |   l___l___|   |___l   |   |   l   |   l   /   l___|"
+COLOR 7: PRINT "    l____   |   |   |   __)     |   |   |  / \  |   _   |   _   l   __)_"
+COLOR 8: PRINT "    |   l   |   l   |   |       |   |   |       |   |   |   |   |   l   |"
+COLOR 8: PRINT "    |_______|_______l   |       |   l   l___l___l___|   l___|   l_______|"
+COLOR 8: PRINT "                    `---'       `---'               `---'   `---'"
+COLOR 15: PRINT "                           http://4ds.simplenet.com"
+PRINT
+END SUB
+
+DEFINT A-Z
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                    Draws a kind of line (1 at the moment)                ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+SUB DrawLine (Kind)
+	SELECT CASE Kind
+		CASE 1
+			P 8, " ÄÄ": P 7, "ÄÄ": P 15, STRING$(69, 196): P 7, "ÄÄ": P 8, "ÄÄ"
+	END SELECT
+END SUB
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                       Erases all color codes in a line                   ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+FUNCTION Erase$ (TheStr$)
+		ddd% = INSTR(TheStr$, "~")
+		WHILE ddd% > 0
+			aff% = INSTR(Temp$, "~")
+			TheTemp$ = LEFT$(Temp$, aff% - 1)
+			Temp$ = RIGHT$(Temp$, LEN(Temp$) - 3)
+			ddd% = INSTR(Temp$, "~")
+		WEND
+
+END FUNCTION
+
+FUNCTION GetKey$
+	a$ = "": WHILE a$ = "": a$ = INKEY$: WEND
+	GetKey$ = UCASE$(a$)
+END FUNCTION
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                       Gets X/Y coordinates for Mouse                     ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+FUNCTION GetMouseStatus (MPosX, MPosY)
+		ax = 3
+		Outregs.bx = 0: Outregs.cx = 0: Outregs.dx = 0
+		MouseHandler ax, 0, 0, 0
+		GetMouseStatus = Outregs.bx
+		MPosX = Outregs.cx \ MHCell + 1
+		MPosY = Outregs.dx \ MVCell + 1
+END FUNCTION
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                        Initializes the Help viewer                       ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+SUB InitHelp
+	 LastPos = 2
+	 PCOPY 0, 7
+	 DoneIt = 1                 ' Used to check if InitHelp was called before
+	 wid = 1
+	 RESTORE Help
+	 READ num
+	 FOR a = 1 TO num                                               'Get Colors
+		  READ Text$(a - 1)
+		  ColorVal(a - 1) = VAL("&H" + LEFT$(Text$(a - 1), 2))
+		  Text$(a - 1) = RIGHT$(Text$(a - 1), LEN(Text$(a - 1)) - 2)
+		  TheLen = 79
+		  FOR BB = 1 TO LEN(Text$(a - 1))
+				IF INSTR(BB, Text$(a - 1), "~") THEN TheLen = TheLen + 3
+		  NEXT
+		  Text$(a - 1) = LEFT$(Text$(a - 1), TheLen)    'Convert CHR$(255)
+		  WHILE INSTR(Text$(a - 1), CHR$(255))          ' to quotes ("")
+				quotes = INSTR(Text$(a - 1), CHR$(255))
+				IF quotes THEN MID$(Text$(a - 1), quotes, 1) = CHR$(34)
+		  WEND
+	 NEXT
+	 DEF SEG = 0                             ' Determine the adress of the crt
+	 crtc = PEEK(1123) + 256 * PEEK(1124)    ' controller port. It's &H3D4 for
+	 IF crtc = &H3D4 THEN                    ' color and &H3B4 for monochrome
+		 DetColor = 1                        ' monitors.
+	 END IF
+
+END SUB
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           Initializes the Mouse                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+SUB InitMouse
+IF UseMouse THEN
+	IF Mouseinit = 0 THEN
+		IF ThereIsAMouse THEN
+			a% = MouseReset
+			UseMouse = a%
+			Mouseinit = 1
+		END IF
+	END IF
+END IF
+END SUB
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           Handles all Mouse code                         ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+SUB MouseHandler (ax, bx, cx, dx)
+
+'DIM Inregs AS REGS
+		Inregs.ax = ax
+		Inregs.bx = bx
+		Inregs.cx = cx
+		Inregs.dx = dx
+		'INTERRUPT MouseIntr, Inregs, Outregs
+		DEF SEG = VARSEG(dos%(0))
+		CALL ABSOLUTE(MouseIntr%, Inregs, Outregs, VARPTR(dos%(0)))
+
+END SUB
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                        Turns off Mouse temporarily                       ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+SUB MouseOff
+		IF MouseVisible THEN
+			 MouseHandler 2, 0, 0, 0
+			 MouseVisible = False
+		END IF
+END SUB
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                         Turns on Mouse temporarily                       ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+SUB MouseOn
+		IF NOT MouseVisible THEN
+			 MouseHandler 1, 0, 0, 0
+			 MouseVisible = True
+		END IF
+END SUB
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                        Resets Mouse to basic usage                       ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+FUNCTION MouseReset
+		MHMax = 639    'Max virtual horizontal mouse position
+		MVMax = 199    'Max virtual vertical mouse position
+		MHCell = 8     'Mouse horizontal cell width
+		MVCell = 8     'Mouse vertical cell height
+		MouseIntr = &H33
+		MouseHandler 0, 0, 0, 0
+		MouseReset = Outregs.ax
+		MouseVisible = False
+END FUNCTION
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                              Actual program                              ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+SUB OnlineHelp
+ InitHelp
+ DrawBottom
+ Start = 1
+WHILE KeyIn$ <> CHR$(27)
+TheStart:
+ IF UseMouse% THEN MouseOff
+ ScrollBar Start, num - 21
+ FOR a = Start TO Start + 22
+
+	LOCATE a - Start + 1, 1
+	IF INSTR(Text$(a - 1), "þ") THEN
+		IF INSTR(Text$(a - 1), "LINE") THEN
+			TypeLine = VAL(MID$(Text$(a - 1), INSTR(Text$(a - 1), "LINE") + 4, 1))
+			DrawLine TypeLine
+			GOTO Outta
+		END IF
+		IF INSTR(Text$(a - 1), "BUTTON") THEN
+		PRINT SPACE$(79);
+		LOCATE a - Start + 1, 1
+			PRINT SPACE$(INSTR(Text$(a - 1), "BUTTON"));
+			DB
+			GOTO Outta
+		END IF
+	END IF
+	IF INSTR(Text$(a - 1), "~") THEN
+		PRINT SPACE$(79);
+		LOCATE a - Start + 1, 1
+		NextColor = ColorVal(a - 1)
+		Temp$ = Text$(a - 1)
+		ddd% = INSTR(Text$(a - 1), "~")
+		WHILE ddd% > 0
+			aff% = INSTR(Temp$, "~")
+			TheTemp$ = LEFT$(Temp$, aff% - 1)
+			Temp$ = RIGHT$(Temp$, LEN(Temp$) - aff% + 1)
+			P NextColor, TheTemp$
+			NextColor$ = "&H" + RIGHT$(LEFT$(Temp$, 3), 2)
+			NextColor = VAL(NextColor$)
+			Temp$ = RIGHT$(Temp$, LEN(Temp$) - 3)
+			ddd% = INSTR(Temp$, "~")
+		WEND
+			P NextColor, Temp$
+		  
+	ELSE
+		P ColorVal(a - 1), Text$(a - 1) + SPACE$(79 - LEN(Text$(a - 1)))
+	END IF
+Outta:
+ NEXT
+ IF UseMouse% THEN MouseOn
+GetKey:
+	KeyIn$ = ""
+	WHILE KeyIn$ = "": KeyIn$ = INKEY$
+IF UseMouse THEN
+	Buttons = GetMouseStatus(MPosX, MPosY)
+	IF Buttons AND Count > 0 THEN
+		Count = Count + 1
+		IF Count = 1500 THEN Count = 0
+	ELSE
+		Count = 0
+	END IF
+	IF Buttons = 1 THEN
+		IF MPosX = 80 THEN
+			IF MPosY = 1 THEN
+				KeyIn$ = CHR$(0) + CHR$(&H48)
+			END IF
+			IF MPosY = 23 THEN
+				KeyIn$ = CHR$(0) + CHR$(&H50)
+			END IF
+			IF MPosY <> 1 AND MPosY < 23 THEN
+				IF Count = 0 THEN
+					IF MPosY < LastPos THEN KeyIn$ = CHR$(0) + CHR$(&H49): Count = 1
+					IF MPosY > LastPos THEN KeyIn$ = CHR$(0) + CHR$(&H51): Count = 1
+				END IF
+			END IF
+		ELSE
+			IF MPosY < 24 THEN
+			IF INSTR(Text$(Start + MPosY - 2), "þBUTTON") THEN
+				DDDD = Start + MPosY - 2
+				TypeLine = VAL(MID$(Text$(DDDD), INSTR(Text$(DDDD), "BUTTON") + 6, 4))
+				Start = TypeLine: GOTO TheStart
+			END IF
+			END IF
+		END IF
+	END IF
+END IF
+	WEND
+SELECT CASE KeyIn$
+	CASE CHR$(0) + CHR$(&H50)
+		Start = Start + 1
+		IF Start = num - 21 THEN Start = Start - 1: GOTO GetKey
+	CASE CHR$(0) + CHR$(&H48)
+		Start = Start - 1
+		IF Start = 0 THEN Start = 1: GOTO GetKey
+	CASE CHR$(27)
+		EXIT SUB
+	CASE CHR$(0) + CHR$(&H51)
+		IF Start = num - 22 THEN GOTO GetKey
+		Start = Start + 22
+		IF Start > num - 22 THEN Start = num - 22
+	CASE CHR$(0) + CHR$(&H49)
+		IF Start = 1 THEN GOTO GetKey
+		Start = Start - 22
+		IF Start < 1 THEN Start = 1
+	CASE CHR$(0) + CHR$(&H47)'Home
+		IF Start = 1 THEN GOTO GetKey
+		Start = 1
+	CASE CHR$(0) + CHR$(&H4F)'END
+		IF Start = num - 22 THEN GOTO GetKey
+		Start = num - 22
+	CASE "S", "s"
+		Search
+	CASE "P", "p"
+		PrintDocument
+	CASE ELSE
+		GOTO GetKey
+END SELECT
+WEND
+END SUB
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                     Used to replace 2 long lines of code.                ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+SUB P (TheColor, st$)
+	if DetColor then
+		COLOR TheColor MOD 32, INT(TheColor / 32)
+	END IF
+	PRINT st$;
+END SUB
+
+SUB PrintDocument
+	LOCATE 25, 1: PRINT SPACE$(80);
+
+	LOCATE 25, 1: PRINT "Print Complete Document? (Y/N)";
+	WHILE a$ <> "N" AND a$ <> "Y": a$ = GetKey$: WEND
+	IF a$ = "N" THEN
+		DrawBottom
+		EXIT SUB
+	ELSE
+		FOR TheLoop = 1 TO num
+			LPRINT Erase$(Text$(TheLoop - 1))
+		NEXT
+		LPRINT CHR$(12); 'np
+		LOCATE 25, 1: PRINT SPACE$(80);
+		LOCATE 25, 1: PRINT "Printing Completed, press any key to continue";
+		a$ = GetKey$
+		DrawBottom
+	END IF
+END SUB
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                       Displays scrollbar on the side                     ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+SUB ScrollBar (Position, Total)
+Percentage = INT(Position / Total * 21) + 2
+LOCATE LastPos, 80: COLOR 0, 15: PRINT "°";
+LOCATE Percentage, 80
+P 0, " "
+LastPos = Percentage
+END SUB
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                                Does search                               ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+SUB Search
+	COLOR 7, 0
+	LOCATE 25, 1
+	PCOPY 0, 7
+	PRINT SPACE$(80);
+	LOCATE 25, 1
+	INPUT "Search for What:", TheSearch$
+	PCOPY 7, 0
+	TheSearch$ = UCASE$(TheSearch$)
+	FOR a = 1 TO num
+		IF INSTR(UCASE$(Text$(a - 1)), TheSearch$) THEN
+	IF a + 22 > num THEN DD = a - 22: bottom = 1:  ELSE DD = a: bottom = 0
+	FOR BB = DD TO DD + 22
+		LOCATE BB - DD + 1, 1
+			IF INSTR(Text$(BB - 1), "þ") THEN
+				IF INSTR(Text$(BB - 1), "LINE") THEN
+					TypeLine = VAL(MID$(Text$(BB - 1), INSTR(Text$(BB - 1), "LINE") + 4, 1))
+					DrawLine TypeLine
+					GOTO Outta1
+				END IF
+				IF INSTR(Text$(BB - 1), "BUTTON") THEN
+				PRINT SPACE$(79);
+				LOCATE BB - DD + 1, 1
+					PRINT SPACE$(INSTR(Text$(BB - 1), "BUTTON"));
+					DB
+					GOTO Outta1
+				END IF
+			END IF
+			IF INSTR(Text$(BB - 1), "~") THEN
+				PRINT SPACE$(79);
+				LOCATE BB - DD + 1, 1
+				NextColor = ColorVal(BB - 1)
+				Temp$ = Text$(BB - 1)
+				ddd% = INSTR(Text$(BB - 1), "~")
+				WHILE ddd% > 0
+					aff% = INSTR(Temp$, "~")
+					TheTemp$ = LEFT$(Temp$, aff% - 1)
+					Temp$ = RIGHT$(Temp$, LEN(Temp$) - aff% + 1)
+					P NextColor, TheTemp$
+					NextColor$ = "&H" + RIGHT$(LEFT$(Temp$, 3), 2)
+					NextColor = VAL(NextColor$)
+					Temp$ = RIGHT$(Temp$, LEN(Temp$) - 3)
+					ddd% = INSTR(Temp$, "~")
+				WEND
+					P NextColor, Temp$
+		 
+			ELSE
+				P ColorVal(BB - 1), Text$(BB - 1) + SPACE$(79 - LEN(Text$(BB - 1)))
+			END IF
+Outta1:
+
+ NEXT
+ IF bottom = 0 THEN
+	COLOR 15, 0: LOCATE 1, 1: PRINT "->": LOCATE 1, 78: PRINT "<-"
+ ELSE
+	COLOR 15, 0: LOCATE 23, 1: PRINT "->": LOCATE 23, 78: PRINT "<-"
+ END IF
+ LOCATE 25, 1: PRINT SPACE$(80); : LOCATE 25, 1
+ PRINT "Continue? (Y/N)";
+ Start = a
+IF Start > num - 22 THEN Start = num - 22
+ 
+HEHE: F$ = "": WHILE F$ = "": F$ = INKEY$: WEND
+	IF F$ = "Y" OR F$ = "y" THEN GOTO kewll
+	IF F$ = "N" OR F$ = "n" THEN GOTO endingsearch
+	IF UCASE$(F$) <> "Y" AND UCASE$(F$) <> "N" THEN GOTO HEHE
+kewll:
+	END IF
+ NEXT
+ SOUND 750, 1.5
+ COLOR 18, 0
+ LOCATE 25, 1: PRINT SPACE$(80); : LOCATE 25, 1
+ PRINT "No search is found...  ";
+ a$ = ""
+ WHILE a$ = ""
+	a$ = INKEY$
+ WEND
+ LOCATE 25, 1: PRINT SPACE$(80);
+
+DrawBottom
+EXIT SUB
+endingsearch:
+Start = a
+DrawBottom
+IF Start > num - 22 THEN Start = num - 22
+ScrollBar Start, num - 22
+END SUB
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                           CatGen v3.0 Shareware                          ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''                 Checks to see if there is a mouse installed              ''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+FUNCTION ThereIsAMouse
+		IRET = 207
+		DEF SEG = 0    'Set to base system address
+		DIM MouseSegment AS LONG
+		MouseSegment = PEEK(207) * 256 + PEEK(206)
+		MouseOffset = PEEK(205) * 256 + PEEK(204)
+		IF MouseSegment = 0 AND MouseOffset = 0 THEN
+			 ThereIsAMouse = False
+		ELSE
+			 DEF SEG = MouseSegment
+			 MouseInstruction = PEEK(MouseOffset)
+			 IF MouseInstruction = IRET THEN
+					ThereIsAMouse = False
+			 ELSE
+					ThereIsAMouse = True
+			 END IF
+		END IF
+		DEF SEG
+END FUNCTION
+
